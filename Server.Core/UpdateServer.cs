@@ -4,13 +4,10 @@ namespace Server.Core
 {
     public class UpdateServer: IUpdateServer
     {
-        public IDictionary<string, string> RequestFilesList() => DataContainer.Default.FileHashes;
         public string GetHashAlg() => DataContainer.Default.HashAlg;
-
-        public byte[] GetFilePart(string path, int id, out bool isLast)
-        {
-            isLast = true;
-            return null;
-        }
+        public string GetCurrentVersion() => DataContainer.Default.CurrentVersion;
+        public IDictionary<string, FileState> RequestDiff(string versionFrom) => DataContainer.Default.GetDiff(versionFrom);
+        public IDictionary<string, string> RequestCurrentFiles() => DataContainer.Default.CurrentFiles;
+        public byte[] GetFilePart(string path, int id, out bool isArchived, out bool isLast) => DataContainer.Default.GetFilePart(path, id, out isArchived, out isLast);
     }
 }

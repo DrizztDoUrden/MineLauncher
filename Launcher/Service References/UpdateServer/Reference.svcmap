@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="8f391880-6c26-45d4-8749-67b48c9f4e67" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>false</GenerateAsynchronousMethods>
+    <GenerateTaskBasedAsynchronousMethod>true</GenerateTaskBasedAsynchronousMethod>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings />
+    <GenerateSerializableTypes>true</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://localhost:8733/Minelauncher/mex" Protocol="mex" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="service.wsdl" MetadataType="Wsdl" ID="92fb37ac-973e-4e6e-9405-c1a3ce42b89a" SourceId="1" SourceUrl="http://localhost:8733/Minelauncher/mex" />
+    <MetadataFile FileName="service.xsd" MetadataType="Schema" ID="71005abc-9cb4-4e44-8598-01dd8d8f4627" SourceId="1" SourceUrl="http://localhost:8733/Minelauncher/mex" />
+    <MetadataFile FileName="service1.xsd" MetadataType="Schema" ID="0f5f2015-8b84-42e6-8507-1efe24c53d61" SourceId="1" SourceUrl="http://localhost:8733/Minelauncher/mex" />
+    <MetadataFile FileName="Arrays.xsd" MetadataType="Schema" ID="729da6b7-81df-461a-8208-168afa927b33" SourceId="1" SourceUrl="http://localhost:8733/Minelauncher/mex" />
+    <MetadataFile FileName="Server.Core.xsd" MetadataType="Schema" ID="4f8a84a1-78b8-458b-b0f5-1bc78eeb229e" SourceId="1" SourceUrl="http://localhost:8733/Minelauncher/mex" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>
