@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Launcher.UpdateServer;
 using Updater.Utilities;
@@ -23,6 +24,9 @@ namespace Launcher
             var dir = Path.GetDirectoryName(fileFullPath);
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
+
+            if (LauncherSettings.Default.ConsoleOutput)
+                Console.WriteLine($"Downloading {filePath}");
 
             using (var file = File.Create(fileFullPath))
             {

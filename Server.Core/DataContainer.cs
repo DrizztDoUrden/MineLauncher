@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Xml.Serialization;
+using Newtonsoft.Json;
 using Updater.Utilities;
 
 namespace Server.Core
@@ -40,39 +40,21 @@ namespace Server.Core
                 {
                     if (_default == null)
                     {
-                        HistoryContainer history;
                         int buffSize;
                         bool updateRequired;
 
                         bool.TryParse(ConfigurationManager.AppSettings["MineLauncher.Server:UpdateEveryStart"], out updateRequired);
-                        if (!int.TryParse(ConfigurationManager.AppSettings["MineLauncher.Server:BufferSize"], out buffSize))
-                            buffSize = 32 * 1024;
+                        if (!int.TryParse(ConfigurationManager.AppSettings["MineLauncher.Server:BufferSize"], out buffSize)) buffSize = 32 * 1024;
 
                         var histPath = ConfigurationManager.AppSettings["MineLauncher.Server:HistoryPath"];
                         if (!histPath.Contains(":"))
                             histPath = $"{ExeDir}\\{histPath}";
 
-                        if (File.Exists(histPath))
-                        {
-                            var xml = new XmlSerializer(typeof(HistoryContainer));
-
-                            lock (_histFileLock)
-                            {
-                                using (var file = File.OpenRead(histPath))
-                                    history = (HistoryContainer)xml.Deserialize(file);
-                            }
-                        }
-                        else
-                        {
-                            history = new HistoryContainer();
-                            updateRequired = true;
-                        }
-
                         _default = new DataContainer(
                             rootPath: ConfigurationManager.AppSettings["MineLauncher.Server:RootPath"],
                             hashAlg: ConfigurationManager.AppSettings["MineLauncher.Server:HashAlgorithm"],
                             bufferSize: buffSize,
-                            history: history
+                            history: LoadHistory(histPath, ref updateRequired)
                         );
 
                         if (!_default.RootPath.Contains(":"))
@@ -124,18 +106,39 @@ namespace Server.Core
             if (!Directory.Exists(RootPath))
                 Directory.CreateDirectory(RootPath);
             
-            foreach (var file in Directory.GetFiles(RootPath))
+            foreach (var file in Directory.EnumerateFiles(RootPath, "*", SearchOption.AllDirectories))
             {
                 var path = GetRelativePath(file, RootPath);
                 if (string.IsNullOrEmpty(path)) continue;
                 fileHashes[path] = FileHashGetter.GetHash(file, HashAlg);
             }
 
-            _history.AddVersion(fileHashes);
-            SaveHistory();
+            var curVer = _history.CurrentVersion;
+            var newVer = _history.AddVersion(fileHashes);
+            if (newVer != curVer) SaveHistory();
         }
 
         #endregion
+
+        public static HistoryContainer LoadHistory(string histPath, ref bool updateRequired)
+        {
+            if (File.Exists(histPath))
+            {
+                var json = JsonSerializer.CreateDefault();
+
+                lock (_histFileLock)
+                {
+                    using (var file = File.OpenRead(histPath))
+                    using (var reader = new StreamReader(file))
+                        return (HistoryContainer)json.Deserialize(reader, typeof(HistoryContainer));
+                }
+            }
+            else
+            {
+                updateRequired = true;
+                return new HistoryContainer();
+            }
+        }
 
         public void SaveHistory()
         {
@@ -143,18 +146,21 @@ namespace Server.Core
             if (!histPath.Contains(":"))
                 histPath = $"{ExeDir}\\{histPath}";
 
-            var xml = new XmlSerializer(typeof(HistoryContainer));
             var histDir = Path.GetDirectoryName(histPath);
             if (!Directory.Exists(histDir)) Directory.CreateDirectory(histDir);
+            if (File.Exists(histPath)) File.Delete(histPath);
 
+            var json = JsonSerializer.CreateDefault();
+            json.Formatting = Formatting.Indented;
             lock (_histFileLock)
             {
                 using (var file = File.OpenWrite(histPath))
-                    xml.Serialize(file, _history);
+                using (var writer = new StreamWriter(file))
+                    json.Serialize(writer, _history, typeof(HistoryContainer));
             }
         }
 
-        public Dictionary<string, FileState> GetDiff(string version, string versionFrom = null) => _history.GetDiff(versionFrom, version);
+        public Dictionary<string, FileState> GetDiff(string versionFrom, string version = null) => _history.GetDiff(versionFrom, version);
         public Dictionary<string, string> CurrentFiles => _history.CurrentVersionFiles;
         public string CurrentVersion => _history.CurrentVersion;
 

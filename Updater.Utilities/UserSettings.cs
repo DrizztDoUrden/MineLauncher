@@ -2,6 +2,8 @@
 
 namespace Updater.Utilities
 {
+    public delegate bool TryParse<T>(string str, out T result); 
+
     public abstract class UserSettings
     {
         private Configuration _cfg;
@@ -47,6 +49,18 @@ namespace Updater.Utilities
             else
                 _section.Settings[name].Value = value;
         }
+
+        protected T GetValue<T>(string name, TryParse<T> parser)
+        {
+            var optValue = GetValue("ConsoleOutput");
+            if (optValue == null) return default(T);
+
+            T result;
+            parser(optValue, out result);
+            return result;
+        }
+
+        protected void SetValue<T>(string name, T value) => SetValue(name, value.ToString());
 
         #endregion
 

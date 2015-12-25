@@ -35,5 +35,11 @@ namespace Launcher
             get { return GetValue("ClientPath"); }
             set { SetValue("ClientPath", value); }
         }
+
+        public bool ConsoleOutput
+        {
+            get { return GetValue<bool>("ConsoleOutput", bool.TryParse); }
+            set { SetValue("ConsoleOutput", value); }
+        }
     }
 }

@@ -8,11 +8,10 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Launcher.UpdateServer {
-    using System.Runtime.Serialization;
-    using System;
-    
-    
+namespace Launcher.UpdateServer
+{
+
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Runtime.Serialization", "4.0.0.0")]
     [System.Runtime.Serialization.DataContractAttribute(Name="FileState", Namespace="http://schemas.datacontract.org/2004/07/Server.Core")]

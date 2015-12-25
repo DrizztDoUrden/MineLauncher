@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Serialization;
-using Updater.Utilities;
+using Newtonsoft.Json;
 
 namespace Server.Core
 {
@@ -9,47 +8,13 @@ namespace Server.Core
     {
         public long LastIncrementVersion { get; set; }
         public string CurrentVersion { get; set; }
-        [XmlIgnore] public Dictionary<string, Dictionary<string, string>> History { get; private set; }
-        [XmlIgnore] public Dictionary<string, string> CurrentVersionFiles => History[CurrentVersion];
+        public Dictionary<string, Dictionary<string, string>> History { get; private set; }
+        [JsonIgnore] public Dictionary<string, string> CurrentVersionFiles => History[CurrentVersion];
 
         public HistoryContainer()
         {
             History = new Dictionary<string, Dictionary<string, string>>();
         }
-
-        #region Xml serialization
-
-        [XmlElement(ElementName = "History")]
-        public List<Pair<string, List<Pair<string, string>>>> HistorySerializer
-        {
-            get
-            {
-                if (!History.Any()) return null;
-                
-                return History
-                    .Select(kvp =>
-                        new Pair<string, List<Pair<string, string>>>(
-                            kvp.Key,
-                            kvp.Value
-                                .Select(Pair<string, string>.FromKvp)
-                                .ToList()
-                        )
-                    )
-                    .ToList();
-            }
-            set
-            {
-                History = value.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.ToDictionary(
-                        fileList => fileList.Key,
-                        fileList => fileList.Value
-                    )
-                );
-            }
-        }
-
-        #endregion
 
         public string AddVersion(Dictionary<string, string> files, string version = null)
         {

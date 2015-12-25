@@ -43,7 +43,6 @@
   <ItemGroup>
     <Compile Include="FileHashGetter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Pair.cs" />
     <Compile Include="TaskExtensions.cs" />
     <Compile Include="UserSettings.cs" />
   </ItemGroup>
