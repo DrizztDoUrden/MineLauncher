@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 using Updater.Utilities;
 
@@ -14,7 +15,11 @@ namespace Launcher
         public static void Message(string text, string caption)
         {
             if (LauncherSettings.Default.ConsoleOutput)
+#if !DEBUG
                 Console.WriteLine(text);
+#else
+                Debug.WriteLine(text);
+#endif
             else
                 MessageBox.Show(text, caption);
         }
