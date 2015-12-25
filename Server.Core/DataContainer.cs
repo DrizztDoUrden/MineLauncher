@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -14,18 +16,68 @@ namespace Server.Core
         private HistoryContainer _history;
 
         public string RootPath { get; private set; }
-        public string HashAlg { get; private set; }
+        public string TempPath { get; private set; }
+        public IEnumerable<string> ArchiveBlackList { get; private set; }
+
+        public string HashAlgorithm { get; private set; }
         public int BufferSize { get; private set; }
+        public bool ArchiveFiles { get; private set; }
         
         [DllImport("shlwapi.dll", CharSet = CharSet.Auto)]
         private static extern bool PathRelativePathTo(
             [Out] StringBuilder pszPath,
-            [In] string pszFrom, [In] FileAttributes dwAttrFrom,
-            [In] string pszTo, [In] FileAttributes dwAttrTo
+            [In] string pszFrom,    [In] FileAttributes dwAttrFrom,
+            [In] string pszTo,      [In] FileAttributes dwAttrTo
         );
 
         private static string ExeDir => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         private static object _histFileLock = new object();
+
+        #region Config helpers
+
+        private static string GetCfgValue(string name) => ConfigurationManager.AppSettings[$"MineLauncher.Server:{name}"];
+
+        private static T GetCfgValue<T>(string name, TryParse<T> parser)
+        {
+            T value;
+            if (!parser(GetCfgValue(name), out value))
+                return default(T);
+            return value;
+        }
+
+        private static T GetCfgValue<T>(string name, TryParse<T> parser, T defaultValue)
+        {
+            T value;
+            if (!parser(GetCfgValue(name), out value))
+                return defaultValue;
+            return value;
+        }
+
+        private static string FixPath(string name)
+        {
+            var path = GetCfgValue(name);
+            if (!path.Contains(":"))
+                path = $"{ExeDir}\\{path}";
+
+            return path;
+        }
+
+        #endregion
+
+        #region Cfg values
+
+        private static bool UpdateEveryStart => GetCfgValue<bool>("UpdateEveryStart", bool.TryParse);
+        private static int CfgBufferSize => GetCfgValue("BufferSize", int.TryParse, 32 * 1024);
+        private static string CfgHashAlgorithm => GetCfgValue("HashAlgorithm");
+
+        private static string HistoryPath => FixPath("HistoryPath");
+        private static string CfgRootPath => FixPath("RootPath");
+        private static string CfgTempPath => FixPath("TempPath");
+
+        private static bool CfgArchiveFiles => GetCfgValue<bool>("ArchiveFiles", bool.TryParse);
+        private static IEnumerable<string> CfgArchiveBlackList => GetCfgValue("ArchiveBlackList").Split(',').Select(s => s.Trim());
+
+        #endregion
 
         #region Singleton
 
@@ -40,26 +92,18 @@ namespace Server.Core
                 {
                     if (_default == null)
                     {
-                        int buffSize;
-                        bool updateRequired;
-
-                        bool.TryParse(ConfigurationManager.AppSettings["MineLauncher.Server:UpdateEveryStart"], out updateRequired);
-                        if (!int.TryParse(ConfigurationManager.AppSettings["MineLauncher.Server:BufferSize"], out buffSize)) buffSize = 32 * 1024;
-
-                        var histPath = ConfigurationManager.AppSettings["MineLauncher.Server:HistoryPath"];
-                        if (!histPath.Contains(":"))
-                            histPath = $"{ExeDir}\\{histPath}";
+                        var updateRequired = UpdateEveryStart;
 
                         _default = new DataContainer(
-                            rootPath: ConfigurationManager.AppSettings["MineLauncher.Server:RootPath"],
-                            hashAlg: ConfigurationManager.AppSettings["MineLauncher.Server:HashAlgorithm"],
-                            bufferSize: buffSize,
-                            history: LoadHistory(histPath, ref updateRequired)
+                            rootPath: CfgRootPath,
+                            tempPath: CfgTempPath,
+                            hashAlg: CfgHashAlgorithm,
+                            bufferSize: CfgBufferSize,
+                            archiveFiles: CfgArchiveFiles,
+                            archiveBlackList: CfgArchiveBlackList,
+                            history: LoadHistory(HistoryPath, ref updateRequired)
                         );
-
-                        if (!_default.RootPath.Contains(":"))
-                            _default.RootPath = $"{ExeDir}\\{_default.RootPath}";
-
+                        
                         if (updateRequired)
                             _default.Update();
                     }
@@ -72,11 +116,14 @@ namespace Server.Core
 
         #region Constructors
 
-        public DataContainer(string rootPath, string hashAlg, int bufferSize, HistoryContainer history)
+        public DataContainer(string rootPath, string tempPath, string hashAlg, int bufferSize, bool archiveFiles, IEnumerable<string> archiveBlackList, HistoryContainer history)
         {
+            TempPath = tempPath;
             RootPath = rootPath;
-            HashAlg = hashAlg;
+            HashAlgorithm = hashAlg;
             BufferSize = bufferSize;
+            ArchiveFiles = archiveFiles;
+            ArchiveBlackList = archiveBlackList;
             _history = history;
         }
 
@@ -110,15 +157,23 @@ namespace Server.Core
             {
                 var path = GetRelativePath(file, RootPath);
                 if (string.IsNullOrEmpty(path)) continue;
-                fileHashes[path] = FileHashGetter.GetHash(file, HashAlg);
+                fileHashes[path] = FileHashGetter.GetHash(file, HashAlgorithm);
             }
 
             var curVer = _history.CurrentVersion;
             var newVer = _history.AddVersion(fileHashes);
-            if (newVer != curVer) SaveHistory();
+
+            if (newVer != curVer)
+            {
+                SaveHistory();
+                if (ArchiveFiles)
+                    PrepareArchive();
+            }
         }
 
         #endregion
+
+        #region History save/load
 
         public static HistoryContainer LoadHistory(string histPath, ref bool updateRequired)
         {
@@ -160,26 +215,63 @@ namespace Server.Core
             }
         }
 
-        public Dictionary<string, FileState> GetDiff(string versionFrom, string version = null) => _history.GetDiff(versionFrom, version);
+        #endregion
+
+        #region Archiving
+
+        private string GetFilePath(string path)
+        {
+            var rawPath = $"{RootPath}\\{path}";
+            if (!ArchiveFiles) return rawPath;
+
+            var fullPath = $"{TempPath}\\{path}";
+            if (File.Exists(fullPath)) return fullPath;
+
+            return rawPath;
+        }
+
+        private void PrepareArchive()
+        {
+            if (Directory.Exists(TempPath)) Directory.Delete(TempPath, true);
+
+            foreach (var path in Directory.GetFiles(RootPath, "*", SearchOption.AllDirectories))
+            {
+                var ext = Path.GetExtension(path);
+                if (ArchiveBlackList.Contains(ext)) continue;
+
+                var fileDir = Path.GetDirectoryName(path);
+                if (!Directory.Exists(fileDir)) Directory.CreateDirectory(fileDir);
+
+                var archivePath = $"{TempPath}\\{GetRelativePath(path, RootPath)}";
+                var archiveDir = Path.GetDirectoryName(archivePath);
+                if (!Directory.Exists(archiveDir)) Directory.CreateDirectory(archiveDir);
+
+                using (var file = File.OpenRead(path))
+                using (var archiveFile = File.OpenWrite(archivePath))
+                using (var archive = new GZipStream(archiveFile, CompressionMode.Compress, false))
+                    file.CopyTo(archive);
+            }
+        }
+
+        #endregion
+
+        #region API
+
+        public Dictionary<string, FileState> GetDiff(string versionFrom) => _history.GetDiff(versionFrom);
         public Dictionary<string, string> CurrentFiles => _history.CurrentVersionFiles;
         public string CurrentVersion => _history.CurrentVersion;
+        public bool IsArchived(string path) => File.Exists($"{TempPath}\\{path}");
 
-        public byte[] GetFilePart(string path, int id, out bool isArchived, out bool isLast)
+        public byte[] GetFilePart(string path, int id, out bool isLast)
         {
-#warning Добавить реальную архивацию
-            isArchived = false;
-
             if (!_history.CurrentVersionFiles.ContainsKey(path))
             {
-                isArchived = false;
                 isLast = true;
                 return null;
             }
-
-            var fullPath = $"{RootPath}\\{path}";
-            byte[] buffer = new byte[BufferSize];
-
-            using (var file = File.OpenRead(fullPath))
+            
+            var buffer = new byte[BufferSize];
+            using (var file = File.OpenRead(GetFilePath(path)))
             {
                 var offset = id * BufferSize;
                 file.Position = offset;
@@ -190,5 +282,7 @@ namespace Server.Core
 
             return buffer;
         }
+
+        #endregion
     }
 }

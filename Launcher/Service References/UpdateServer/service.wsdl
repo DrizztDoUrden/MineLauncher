@@ -38,6 +38,18 @@
   <wsdl:message name="IUpdateServer_GetCurrentVersion_OutputMessage">
     <wsdl:part name="parameters" element="tns:GetCurrentVersionResponse" />
   </wsdl:message>
+  <wsdl:message name="IUpdateServer_Update_InputMessage">
+    <wsdl:part name="parameters" element="tns:Update" />
+  </wsdl:message>
+  <wsdl:message name="IUpdateServer_Update_OutputMessage">
+    <wsdl:part name="parameters" element="tns:UpdateResponse" />
+  </wsdl:message>
+  <wsdl:message name="IUpdateServer_IsArchived_InputMessage">
+    <wsdl:part name="parameters" element="tns:IsArchived" />
+  </wsdl:message>
+  <wsdl:message name="IUpdateServer_IsArchived_OutputMessage">
+    <wsdl:part name="parameters" element="tns:IsArchivedResponse" />
+  </wsdl:message>
   <wsdl:portType name="IUpdateServer">
     <wsdl:operation name="RequestDiff">
       <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/RequestDiff" message="tns:IUpdateServer_RequestDiff_InputMessage" />
@@ -58,6 +70,14 @@
     <wsdl:operation name="GetCurrentVersion">
       <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/GetCurrentVersion" message="tns:IUpdateServer_GetCurrentVersion_InputMessage" />
       <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/GetCurrentVersionResponse" message="tns:IUpdateServer_GetCurrentVersion_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="Update">
+      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/Update" message="tns:IUpdateServer_Update_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/UpdateResponse" message="tns:IUpdateServer_Update_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="IsArchived">
+      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/IsArchived" message="tns:IUpdateServer_IsArchived_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/IsArchivedResponse" message="tns:IUpdateServer_IsArchived_OutputMessage" />
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="BasicHttpBinding_IUpdateServer" type="tns:IUpdateServer">
@@ -100,6 +120,24 @@
     </wsdl:operation>
     <wsdl:operation name="GetCurrentVersion">
       <soap:operation soapAction="http://tempuri.org/IUpdateServer/GetCurrentVersion" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Update">
+      <soap:operation soapAction="http://tempuri.org/IUpdateServer/Update" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="IsArchived">
+      <soap:operation soapAction="http://tempuri.org/IUpdateServer/IsArchived" style="document" />
       <wsdl:input>
         <soap:body use="literal" />
       </wsdl:input>

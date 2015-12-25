@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using Launcher.UpdateServer;
 using Updater.Utilities;
@@ -22,7 +23,7 @@ namespace Launcher
 
         private async Task DownloadFile(UpdateServerClient server, string filePath, string fileHash, string path, string hashAlg)
         {
-            var fileFullPath = Path.Combine(path, filePath);
+            var fileFullPath = $"{path}\\{filePath}";
 
             if (File.Exists(fileFullPath))
             {
@@ -37,8 +38,8 @@ namespace Launcher
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
-            WriteToConsole($"Загрузка [{filePath}].");
-
+            WriteToConsole($"Загрузка [{filePath}]...");
+            
             using (var file = File.Create(fileFullPath))
             {
                 var isLast = false;
@@ -47,10 +48,24 @@ namespace Launcher
                 while (!isLast)
                 {
                     var responce = await server.GetFilePartAsync(new GetFilePartRequest(filePath, id++));
-#warning Добавить реальную разархивацию
                     await file.WriteAsync(responce.GetFilePartResult, 0, responce.GetFilePartResult.Length);
                     isLast = responce.isLast;
                 }
+            }
+
+            if (await server.IsArchivedAsync(filePath))
+            {
+                WriteToConsole($"Распаковка [{filePath}]...");
+
+                var tmpPath = $"{fileFullPath}.archive.tmp";
+
+                using (var archFile = File.OpenRead(fileFullPath))
+                using (var archive = new GZipStream(archFile, CompressionMode.Decompress, false))
+                using (var tmp = File.OpenWrite(tmpPath))
+                    archive.CopyTo(tmp);
+
+                File.Delete(fileFullPath);
+                File.Move(tmpPath, fileFullPath);
             }
         }
 
@@ -58,15 +73,21 @@ namespace Launcher
         {
             var files = await server.RequestDiffAsync(version);
 
+            if (files == null)
+            {
+                await DownloadFiles(server, path, hashAlg);
+                return;
+            }
+            
             foreach (var fileInfo in files)
             {
                 if (fileInfo.Value.IsRemoved)
                 {
-                    var fileFullPath = Path.Combine(path, fileInfo.Key);
+                    var fileFullPath = $"{path}\\{fileInfo.Key}";
 
                     if (File.Exists(fileFullPath))
                     {
-                        WriteToConsole($"Удаление [{fileInfo.Key}].");
+                        WriteToConsole($"Удаление [{fileInfo.Key}]...");
                         File.Delete(fileFullPath);
                     }
 
@@ -95,23 +116,23 @@ namespace Launcher
 
                 if (reload || string.IsNullOrEmpty(version))
                 {
-                    WriteToConsole("Выгрузка актуальной версии.");
+                    WriteToConsole("Выгрузка актуальной версии...");
                     await DownloadFiles(server, path, hashAlg);
-                    WriteToConsole("Завершение.");
+                    WriteToConsole("Завершение...");
                     return servVersion;
                 }
 
-                WriteToConsole($"Проверка версии.");
+                WriteToConsole($"Проверка версии...");
                 if (servVersion == version && !_validate)
                 {
                     WriteToConsole("Версия актуальна.");
-                    WriteToConsole("Завершение.");
+                    WriteToConsole("Завершение...");
                     return servVersion;
                 }
 
-                WriteToConsole("Выгрузка актуальной версии.");
+                WriteToConsole("Выгрузка актуальной версии...");
                 await UpdateFiles(server, path, hashAlg, version);
-                WriteToConsole("Завершение.");
+                WriteToConsole("Завершение...");
                 return servVersion;
             }
         }

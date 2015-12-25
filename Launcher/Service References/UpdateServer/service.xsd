@@ -39,7 +39,6 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element minOccurs="0" name="GetFilePartResult" nillable="true" type="xs:base64Binary" />
-        <xs:element minOccurs="0" name="isArchived" type="xs:boolean" />
         <xs:element minOccurs="0" name="isLast" type="xs:boolean" />
       </xs:sequence>
     </xs:complexType>
@@ -65,6 +64,30 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element minOccurs="0" name="GetCurrentVersionResult" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Update">
+    <xs:complexType>
+      <xs:sequence />
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="UpdateResponse">
+    <xs:complexType>
+      <xs:sequence />
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="IsArchived">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="path" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="IsArchivedResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="IsArchivedResult" type="xs:boolean" />
       </xs:sequence>
     </xs:complexType>
   </xs:element>

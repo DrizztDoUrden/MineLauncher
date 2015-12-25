@@ -8,10 +8,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Launcher.UpdateServer
-{
-
-
+namespace Launcher.UpdateServer {
+    using System.Runtime.Serialization;
+    using System;
+    
+    
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Runtime.Serialization", "4.0.0.0")]
     [System.Runtime.Serialization.DataContractAttribute(Name="FileState", Namespace="http://schemas.datacontract.org/2004/07/Server.Core")]
@@ -107,6 +108,18 @@ namespace Launcher.UpdateServer
         
         [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IUpdateServer/GetCurrentVersion", ReplyAction="http://tempuri.org/IUpdateServer/GetCurrentVersionResponse")]
         System.Threading.Tasks.Task<string> GetCurrentVersionAsync();
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IUpdateServer/Update", ReplyAction="http://tempuri.org/IUpdateServer/UpdateResponse")]
+        void Update();
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IUpdateServer/Update", ReplyAction="http://tempuri.org/IUpdateServer/UpdateResponse")]
+        System.Threading.Tasks.Task UpdateAsync();
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IUpdateServer/IsArchived", ReplyAction="http://tempuri.org/IUpdateServer/IsArchivedResponse")]
+        bool IsArchived(string path);
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IUpdateServer/IsArchived", ReplyAction="http://tempuri.org/IUpdateServer/IsArchivedResponse")]
+        System.Threading.Tasks.Task<bool> IsArchivedAsync(string path);
     }
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
@@ -138,17 +151,13 @@ namespace Launcher.UpdateServer
         public byte[] GetFilePartResult;
         
         [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://tempuri.org/", Order=1)]
-        public bool isArchived;
-        
-        [System.ServiceModel.MessageBodyMemberAttribute(Namespace="http://tempuri.org/", Order=2)]
         public bool isLast;
         
         public GetFilePartResponse() {
         }
         
-        public GetFilePartResponse(byte[] GetFilePartResult, bool isArchived, bool isLast) {
+        public GetFilePartResponse(byte[] GetFilePartResult, bool isLast) {
             this.GetFilePartResult = GetFilePartResult;
-            this.isArchived = isArchived;
             this.isLast = isLast;
         }
     }
@@ -201,12 +210,11 @@ namespace Launcher.UpdateServer
             return base.Channel.GetFilePart(request);
         }
         
-        public byte[] GetFilePart(string path, int id, out bool isArchived, out bool isLast) {
+        public byte[] GetFilePart(string path, int id, out bool isLast) {
             Launcher.UpdateServer.GetFilePartRequest inValue = new Launcher.UpdateServer.GetFilePartRequest();
             inValue.path = path;
             inValue.id = id;
             Launcher.UpdateServer.GetFilePartResponse retVal = ((Launcher.UpdateServer.IUpdateServer)(this)).GetFilePart(inValue);
-            isArchived = retVal.isArchived;
             isLast = retVal.isLast;
             return retVal.GetFilePartResult;
         }
@@ -229,6 +237,22 @@ namespace Launcher.UpdateServer
         
         public System.Threading.Tasks.Task<string> GetCurrentVersionAsync() {
             return base.Channel.GetCurrentVersionAsync();
+        }
+        
+        public void Update() {
+            base.Channel.Update();
+        }
+        
+        public System.Threading.Tasks.Task UpdateAsync() {
+            return base.Channel.UpdateAsync();
+        }
+        
+        public bool IsArchived(string path) {
+            return base.Channel.IsArchived(path);
+        }
+        
+        public System.Threading.Tasks.Task<bool> IsArchivedAsync(string path) {
+            return base.Channel.IsArchivedAsync(path);
         }
     }
 }

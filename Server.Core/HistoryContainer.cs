@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -6,7 +7,6 @@ namespace Server.Core
 {
     public class HistoryContainer
     {
-        public long LastIncrementVersion { get; set; }
         public string CurrentVersion { get; set; }
         public Dictionary<string, Dictionary<string, string>> History { get; private set; }
         [JsonIgnore] public Dictionary<string, string> CurrentVersionFiles => History[CurrentVersion];
@@ -21,7 +21,7 @@ namespace Server.Core
             if (CurrentVersion != null && !GetDiff(CurrentVersionFiles, files).Any()) return null;
 
             if (version == null)
-                version = (++LastIncrementVersion).ToString();
+                version = $"{DateTime.UtcNow.ToString("yyyyMMdd-hhmmss")}-{Guid.NewGuid().ToString("N")}";
 
             History.Add(version, files);
             CurrentVersion = version;
@@ -56,18 +56,11 @@ namespace Server.Core
             return diff;
         }
 
-        public Dictionary<string, FileState> GetDiff(string versionFrom, string version = null)
+        public Dictionary<string, FileState> GetDiff(string versionFrom)
         {
-            if (string.IsNullOrEmpty(version))
-                version = CurrentVersion;
+            if (versionFrom == null || !History.ContainsKey(versionFrom)) return null;
 
-            if (!History.ContainsKey(version))
-                return CurrentVersionFiles.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => (FileState)kvp.Value
-                );
-
-            var files = History[version];
+            var files = CurrentVersionFiles;
             var filesFrom = new Dictionary<string, string>(History[versionFrom]);
             
             return GetDiff(filesFrom, files);
