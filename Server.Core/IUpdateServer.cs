@@ -11,7 +11,7 @@ namespace Server.Core
         [OperationContract] byte[] GetFilePart(string path, int id, out bool isLast);
         [OperationContract] string GetHashAlg();
         [OperationContract] string GetCurrentVersion();
-        [OperationContract] void Update();
+        [OperationContract] void Update(string token);
         [OperationContract] bool IsArchived(string path);
     }
 }

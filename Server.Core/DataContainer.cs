@@ -13,6 +13,8 @@ namespace Server.Core
 {
     public class DataContainer
     {
+        private const string AppSettingsPrefix = "MineLauncher.Server";
+
         private HistoryContainer _history;
 
         public string RootPath { get; private set; }
@@ -35,7 +37,7 @@ namespace Server.Core
 
         #region Config helpers
 
-        private static string GetCfgValue(string name) => ConfigurationManager.AppSettings[$"MineLauncher.Server:{name}"];
+        private static string GetCfgValue(string name) => ConfigurationManager.AppSettings[$"{AppSettingsPrefix}:{name}"];
 
         private static T GetCfgValue<T>(string name, TryParse<T> parser)
         {
@@ -76,6 +78,8 @@ namespace Server.Core
 
         private static bool CfgArchiveFiles => GetCfgValue<bool>("ArchiveFiles", bool.TryParse);
         private static IEnumerable<string> CfgArchiveBlackList => GetCfgValue("ArchiveBlackList").Split(',').Select(s => s.Trim());
+
+        private static string UpdateToken => GetCfgValue("UpdateToken");
 
         #endregion
 
@@ -146,13 +150,13 @@ namespace Server.Core
             return localPath.ToString();
         }
 
-        public void Update()
+        private void Update()
         {
             var fileHashes = new Dictionary<string, string>();
 
             if (!Directory.Exists(RootPath))
                 Directory.CreateDirectory(RootPath);
-            
+
             foreach (var file in Directory.EnumerateFiles(RootPath, "*", SearchOption.AllDirectories))
             {
                 var path = GetRelativePath(file, RootPath);
@@ -261,6 +265,12 @@ namespace Server.Core
         public Dictionary<string, string> CurrentFiles => _history.CurrentVersionFiles;
         public string CurrentVersion => _history.CurrentVersion;
         public bool IsArchived(string path) => File.Exists($"{TempPath}\\{path}");
+
+        public void Update(string token)
+        {
+            if (UpdateToken != token) return;
+            Update();
+        }
 
         public byte[] GetFilePart(string path, int id, out bool isLast)
         {

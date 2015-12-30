@@ -42,7 +42,7 @@ namespace Launcher
                     if (id + 1 >= args.Length)
                     {
                         Message("Был получен ключ -root последним аргументом.", "Launcher");
-                        Application.Exit();
+                        Exit();
                     }
                     _root = args[++id];
                     break;
@@ -50,7 +50,7 @@ namespace Launcher
                 case "-h":
                 case "-?":
                     Message(
-                        "-silent - запуск без GUI.\r\n" +
+                        "-silent - запуск без GUI. Сейчас всегда используется.\r\n" +
                         "-reload - загрузить актуальные файлы, вне зависимости от текущей версии.\r\n" +
                         "-validate - сверить все файлы, даже если версия актуалбна.\r\n" +
                         "-root <путь> - путь к папке, куда нужно выкладывать файлы клиента.\r\n" +
