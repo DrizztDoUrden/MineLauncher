@@ -9,9 +9,6 @@ public class WcfServiceWrapper<TServiceImplementation, TServiceContract>
     : ServiceBase
     where TServiceImplementation : TServiceContract
 {
-    private readonly string _serviceUri;
-    private ServiceHost _serviceHost;
- 
     public WcfServiceWrapper(string serviceName, string serviceUri)
     {
         if (serviceUri.Contains("://"))
@@ -22,28 +19,16 @@ public class WcfServiceWrapper<TServiceImplementation, TServiceContract>
 
         ServiceName = serviceName;
     }
- 
-    protected override void OnStart(string[] args)
-    {
-        Start();
-    }
- 
-    protected override void OnStop()
-    {
-        Stop();
-    }
- 
+
     public void Start()
     {
         Console.WriteLine(ServiceName + " starting...");
-        bool openSucceeded = false;
+        var openSucceeded = false;
         try
         {
             if (_serviceHost != null)
-            {
                 _serviceHost.Close();
-            }
- 
+
             _serviceHost = new ServiceHost(typeof(TServiceImplementation));
         }
         catch (Exception e)
@@ -51,7 +36,7 @@ public class WcfServiceWrapper<TServiceImplementation, TServiceContract>
             Console.WriteLine("Caught exception while creating " + ServiceName + ": " + e);
             return;
         }
- 
+
         try
         {
             var binding = new WebHttpBinding(WebHttpSecurityMode.None);
@@ -75,11 +60,9 @@ public class WcfServiceWrapper<TServiceImplementation, TServiceContract>
         finally
         {
             if (!openSucceeded)
-            {
                 _serviceHost.Abort();
-            }
         }
- 
+
         if (_serviceHost.State == CommunicationState.Opened)
         {
             Debug.WriteLine(ServiceName + " started at " + _serviceUri);
@@ -87,7 +70,7 @@ public class WcfServiceWrapper<TServiceImplementation, TServiceContract>
         else
         {
             Console.WriteLine(ServiceName + " failed to open");
-            bool closeSucceeded = false;
+            var closeSucceeded = false;
             try
             {
                 _serviceHost.Close();
@@ -100,13 +83,11 @@ public class WcfServiceWrapper<TServiceImplementation, TServiceContract>
             finally
             {
                 if (!closeSucceeded)
-                {
                     _serviceHost.Abort();
-                }
             }
         }
     }
- 
+
     public new void Stop()
     {
         Console.WriteLine(ServiceName + " stopping...");
@@ -127,4 +108,11 @@ public class WcfServiceWrapper<TServiceImplementation, TServiceContract>
             Console.WriteLine(ServiceName + " stopped...");
         }
     }
+
+    protected override void OnStart(string[] args) { Start(); }
+
+    protected override void OnStop() { Stop(); }
+
+    private readonly string _serviceUri;
+    private ServiceHost _serviceHost;
 }

@@ -4,6 +4,8 @@ namespace Server.Core
 {
     public class UpdateServer : IUpdateServer
     {
+        public void Update() => DataContainer.Default.Update();
+
         #region IUpdateServer Members
 
         public string GetHashAlg() => DataContainer.Default.HashAlgorithm;
@@ -17,7 +19,6 @@ namespace Server.Core
         public byte[] GetFilePart(string path, int id, out bool isLast)
             => DataContainer.Default.GetFilePart(path, id, out isLast);
 
-        public void Update() => DataContainer.Default.Update();
         public bool IsArchived(string path) => DataContainer.Default.IsArchived(path);
 
         #endregion
