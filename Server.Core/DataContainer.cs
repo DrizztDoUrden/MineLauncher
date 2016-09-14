@@ -13,29 +13,54 @@ namespace Server.Core
 {
     public class DataContainer
     {
-        private HistoryContainer _history;
+        public string RootPath { get; }
+        public string TempPath { get; }
+        public IEnumerable<string> ArchiveBlackList { get; }
 
-        public string RootPath { get; private set; }
-        public string TempPath { get; private set; }
-        public IEnumerable<string> ArchiveBlackList { get; private set; }
+        public string HashAlgorithm { get; }
+        public int BufferSize { get; }
+        public bool ArchiveFiles { get; }
 
-        public string HashAlgorithm { get; private set; }
-        public int BufferSize { get; private set; }
-        public bool ArchiveFiles { get; private set; }
-        
-        [DllImport("shlwapi.dll", CharSet = CharSet.Auto)]
-        private static extern bool PathRelativePathTo(
+        #region Constructors
+
+        public DataContainer(string rootPath,
+                             string tempPath,
+                             string hashAlg,
+                             int bufferSize,
+                             bool archiveFiles,
+                             IEnumerable<string> archiveBlackList,
+                             HistoryContainer history)
+        {
+            TempPath = tempPath;
+            RootPath = rootPath;
+            HashAlgorithm = hashAlg;
+            BufferSize = bufferSize;
+            ArchiveFiles = archiveFiles;
+            ArchiveBlackList = archiveBlackList;
+            _history = history;
+        }
+
+        #endregion
+
+        private static readonly object _histFileLock = new object();
+        private readonly HistoryContainer _history;
+
+        private static string ExeDir => Path.GetDirectoryName(
+            Assembly.GetExecutingAssembly()
+                .Location);
+
+        [DllImport("shlwapi.dll", CharSet = CharSet.Auto)] private static extern bool PathRelativePathTo(
             [Out] StringBuilder pszPath,
-            [In] string pszFrom,    [In] FileAttributes dwAttrFrom,
-            [In] string pszTo,      [In] FileAttributes dwAttrTo
+            [In] string pszFrom,
+            [In] FileAttributes dwAttrFrom,
+            [In] string pszTo,
+            [In] FileAttributes dwAttrTo
         );
-
-        private static string ExeDir => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        private static object _histFileLock = new object();
 
         #region Config helpers
 
-        private static string GetCfgValue(string name) => ConfigurationManager.AppSettings[$"MineLauncher.Server:{name}"];
+        private static string GetCfgValue(string name)
+            => ConfigurationManager.AppSettings[$"MineLauncher.Server:{name}"];
 
         private static T GetCfgValue<T>(string name, TryParse<T> parser)
         {
@@ -67,7 +92,7 @@ namespace Server.Core
         #region Cfg values
 
         private static bool UpdateEveryStart => GetCfgValue<bool>("UpdateEveryStart", bool.TryParse);
-        private static int CfgBufferSize => GetCfgValue("BufferSize", int.TryParse, 32 * 1024);
+        private static int CfgBufferSize => GetCfgValue("BufferSize", int.TryParse, 32*1024);
         private static string CfgHashAlgorithm => GetCfgValue("HashAlgorithm");
 
         private static string HistoryPath => FixPath("HistoryPath");
@@ -75,13 +100,16 @@ namespace Server.Core
         private static string CfgTempPath => FixPath("TempPath");
 
         private static bool CfgArchiveFiles => GetCfgValue<bool>("ArchiveFiles", bool.TryParse);
-        private static IEnumerable<string> CfgArchiveBlackList => GetCfgValue("ArchiveBlackList").Split(',').Select(s => s.Trim());
+
+        private static IEnumerable<string> CfgArchiveBlackList => GetCfgValue("ArchiveBlackList")
+            .Split(',')
+            .Select(s => s.Trim());
 
         #endregion
 
         #region Singleton
 
-        private static object _defaultLock = new object();
+        private static readonly object _defaultLock = new object();
         private static DataContainer _default;
 
         public static DataContainer Default
@@ -95,36 +123,21 @@ namespace Server.Core
                         var updateRequired = UpdateEveryStart;
 
                         _default = new DataContainer(
-                            rootPath: CfgRootPath,
-                            tempPath: CfgTempPath,
-                            hashAlg: CfgHashAlgorithm,
-                            bufferSize: CfgBufferSize,
-                            archiveFiles: CfgArchiveFiles,
-                            archiveBlackList: CfgArchiveBlackList,
-                            history: LoadHistory(HistoryPath, ref updateRequired)
+                            CfgRootPath,
+                            CfgTempPath,
+                            CfgHashAlgorithm,
+                            CfgBufferSize,
+                            CfgArchiveFiles,
+                            CfgArchiveBlackList,
+                            LoadHistory(HistoryPath, ref updateRequired)
                         );
-                        
+
                         if (updateRequired)
                             _default.Update();
                     }
                 }
                 return _default;
             }
-        }
-
-        #endregion
-
-        #region Constructors
-
-        public DataContainer(string rootPath, string tempPath, string hashAlg, int bufferSize, bool archiveFiles, IEnumerable<string> archiveBlackList, HistoryContainer history)
-        {
-            TempPath = tempPath;
-            RootPath = rootPath;
-            HashAlgorithm = hashAlg;
-            BufferSize = bufferSize;
-            ArchiveFiles = archiveFiles;
-            ArchiveBlackList = archiveBlackList;
-            _history = history;
         }
 
         #endregion
@@ -136,8 +149,10 @@ namespace Server.Core
             var localPath = new StringBuilder();
             var pathBuilt = PathRelativePathTo(
                 localPath,
-                root, FileAttributes.Directory,
-                file, FileAttributes.Normal
+                root,
+                FileAttributes.Directory,
+                file,
+                FileAttributes.Normal
             );
 
             if (!pathBuilt)
@@ -152,7 +167,7 @@ namespace Server.Core
 
             if (!Directory.Exists(RootPath))
                 Directory.CreateDirectory(RootPath);
-            
+
             foreach (var file in Directory.EnumerateFiles(RootPath, "*", SearchOption.AllDirectories))
             {
                 var path = GetRelativePath(file, RootPath);
@@ -184,15 +199,16 @@ namespace Server.Core
                 lock (_histFileLock)
                 {
                     using (var file = File.OpenRead(histPath))
-                    using (var reader = new StreamReader(file))
-                        return (HistoryContainer)json.Deserialize(reader, typeof(HistoryContainer));
+                    {
+                        using (var reader = new StreamReader(file))
+                        {
+                            return (HistoryContainer) json.Deserialize(reader, typeof(HistoryContainer));
+                        }
+                    }
                 }
             }
-            else
-            {
-                updateRequired = true;
-                return new HistoryContainer();
-            }
+            updateRequired = true;
+            return new HistoryContainer();
         }
 
         public void SaveHistory()
@@ -210,8 +226,12 @@ namespace Server.Core
             lock (_histFileLock)
             {
                 using (var file = File.OpenWrite(histPath))
-                using (var writer = new StreamWriter(file))
-                    json.Serialize(writer, _history, typeof(HistoryContainer));
+                {
+                    using (var writer = new StreamWriter(file))
+                    {
+                        json.Serialize(writer, _history, typeof(HistoryContainer));
+                    }
+                }
             }
         }
 
@@ -247,9 +267,15 @@ namespace Server.Core
                 if (!Directory.Exists(archiveDir)) Directory.CreateDirectory(archiveDir);
 
                 using (var file = File.OpenRead(path))
-                using (var archiveFile = File.OpenWrite(archivePath))
-                using (var archive = new GZipStream(archiveFile, CompressionMode.Compress, false))
-                    file.CopyTo(archive);
+                {
+                    using (var archiveFile = File.OpenWrite(archivePath))
+                    {
+                        using (var archive = new GZipStream(archiveFile, CompressionMode.Compress, false))
+                        {
+                            file.CopyTo(archive);
+                        }
+                    }
+                }
             }
         }
 
@@ -269,11 +295,11 @@ namespace Server.Core
                 isLast = true;
                 return null;
             }
-            
+
             var buffer = new byte[BufferSize];
             using (var file = File.OpenRead(GetFilePath(path)))
             {
-                var offset = id * BufferSize;
+                var offset = id*BufferSize;
                 file.Position = offset;
                 var length = file.Read(buffer, 0, BufferSize);
 

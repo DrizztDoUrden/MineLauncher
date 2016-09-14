@@ -2,12 +2,20 @@
 
 namespace Updater.Utilities
 {
-    public delegate bool TryParse<T>(string str, out T result); 
+    public delegate bool TryParse<T>(string str, out T result);
 
     public abstract class UserSettings
     {
-        private Configuration _cfg;
-        private AppSettingsSection _section;
+        public void Save() => _cfg.Save();
+
+        protected UserSettings(string file, string section)
+        {
+            _cfg = GetConfig(file);
+            _section = GetAppSettings(_cfg, section);
+        }
+
+        private readonly Configuration _cfg;
+        private readonly AppSettingsSection _section;
 
         #region Cfg reading
 
@@ -31,7 +39,7 @@ namespace Updater.Utilities
                 config.Sections.Add(sectionName, section);
             }
             else
-                section = (AppSettingsSection)rawSection;
+                section = (AppSettingsSection) rawSection;
 
             return section;
         }
@@ -63,13 +71,5 @@ namespace Updater.Utilities
         protected void SetValue<T>(string name, T value) => SetValue(name, value.ToString());
 
         #endregion
-
-        protected UserSettings(string file, string section)
-        {
-            _cfg = GetConfig(file);
-            _section = GetAppSettings(_cfg, section);
-        }
-
-        public void Save() => _cfg.Save();
     }
 }

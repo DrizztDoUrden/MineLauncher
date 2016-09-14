@@ -1,5 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<wsdl:definitions xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:tns="http://tempuri.org/" xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="UpdateServer" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
+<wsdl:definitions xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy"
+                  xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:tns="http://tempuri.org/"
+                  xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract"
+                  xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"
+                  xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata"
+                  xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+                  xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl"
+                  xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
+                  xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="UpdateServer"
+                  targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
   <wsdl:types>
     <xsd:schema targetNamespace="http://tempuri.org/Imports">
       <xsd:import namespace="http://tempuri.org/" />
@@ -52,32 +65,45 @@
   </wsdl:message>
   <wsdl:portType name="IUpdateServer">
     <wsdl:operation name="RequestDiff">
-      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/RequestDiff" message="tns:IUpdateServer_RequestDiff_InputMessage" />
-      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/RequestDiffResponse" message="tns:IUpdateServer_RequestDiff_OutputMessage" />
+      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/RequestDiff"
+                  message="tns:IUpdateServer_RequestDiff_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/RequestDiffResponse"
+                   message="tns:IUpdateServer_RequestDiff_OutputMessage" />
     </wsdl:operation>
     <wsdl:operation name="RequestCurrentFiles">
-      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/RequestCurrentFiles" message="tns:IUpdateServer_RequestCurrentFiles_InputMessage" />
-      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/RequestCurrentFilesResponse" message="tns:IUpdateServer_RequestCurrentFiles_OutputMessage" />
+      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/RequestCurrentFiles"
+                  message="tns:IUpdateServer_RequestCurrentFiles_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/RequestCurrentFilesResponse"
+                   message="tns:IUpdateServer_RequestCurrentFiles_OutputMessage" />
     </wsdl:operation>
     <wsdl:operation name="GetFilePart">
-      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/GetFilePart" message="tns:IUpdateServer_GetFilePart_InputMessage" />
-      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/GetFilePartResponse" message="tns:IUpdateServer_GetFilePart_OutputMessage" />
+      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/GetFilePart"
+                  message="tns:IUpdateServer_GetFilePart_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/GetFilePartResponse"
+                   message="tns:IUpdateServer_GetFilePart_OutputMessage" />
     </wsdl:operation>
     <wsdl:operation name="GetHashAlg">
-      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/GetHashAlg" message="tns:IUpdateServer_GetHashAlg_InputMessage" />
-      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/GetHashAlgResponse" message="tns:IUpdateServer_GetHashAlg_OutputMessage" />
+      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/GetHashAlg"
+                  message="tns:IUpdateServer_GetHashAlg_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/GetHashAlgResponse"
+                   message="tns:IUpdateServer_GetHashAlg_OutputMessage" />
     </wsdl:operation>
     <wsdl:operation name="GetCurrentVersion">
-      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/GetCurrentVersion" message="tns:IUpdateServer_GetCurrentVersion_InputMessage" />
-      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/GetCurrentVersionResponse" message="tns:IUpdateServer_GetCurrentVersion_OutputMessage" />
+      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/GetCurrentVersion"
+                  message="tns:IUpdateServer_GetCurrentVersion_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/GetCurrentVersionResponse"
+                   message="tns:IUpdateServer_GetCurrentVersion_OutputMessage" />
     </wsdl:operation>
     <wsdl:operation name="Update">
       <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/Update" message="tns:IUpdateServer_Update_InputMessage" />
-      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/UpdateResponse" message="tns:IUpdateServer_Update_OutputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/UpdateResponse"
+                   message="tns:IUpdateServer_Update_OutputMessage" />
     </wsdl:operation>
     <wsdl:operation name="IsArchived">
-      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/IsArchived" message="tns:IUpdateServer_IsArchived_InputMessage" />
-      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/IsArchivedResponse" message="tns:IUpdateServer_IsArchived_OutputMessage" />
+      <wsdl:input wsaw:Action="http://tempuri.org/IUpdateServer/IsArchived"
+                  message="tns:IUpdateServer_IsArchived_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IUpdateServer/IsArchivedResponse"
+                   message="tns:IUpdateServer_IsArchived_OutputMessage" />
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="BasicHttpBinding_IUpdateServer" type="tns:IUpdateServer">

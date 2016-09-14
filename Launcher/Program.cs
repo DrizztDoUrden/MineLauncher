@@ -7,11 +7,6 @@ namespace Launcher
 {
     public static class Program
     {
-        private static string _root;
-        private static bool _runSilent = false;
-        private static bool _fullReload = false;
-        private static bool _validate = false;
-
         public static void Message(string text, string caption)
         {
             if (LauncherSettings.Default.ConsoleOutput)
@@ -23,6 +18,47 @@ namespace Launcher
             else
                 MessageBox.Show(text, caption);
         }
+
+        public static void Exit()
+        {
+            LauncherSettings.Default.Save();
+            Environment.Exit(0);
+        }
+
+        /// <summary>
+        ///     The main entry point for the application.
+        /// </summary>
+        [STAThread] public static void Main(string[] args)
+        {
+            _root = LauncherSettings.Default.ClientPath ?? "";
+
+            for (var i = 0; i < args.Length; i++)
+                ParseArg(args, ref i);
+
+            if (!_root.Contains(":"))
+                _root = $"{Application.StartupPath}\\{_root}";
+
+            //if (_runSilent)
+            //{
+            var upd = new Updater();
+            LauncherSettings.Default.Version =
+                upd.Update(_root, _fullReload, _validate, LauncherSettings.Default.Version)
+                    .Await();
+            Exit();
+            //}
+            //
+            //Message(
+            //    "Пока поддерживается только с включенным -silent режимом.\r\n" +
+            //    "Для списка возможных ключей используйте с ключом -h/-help/-?.",
+            //    "Launcher"
+            //);
+            //Exit();
+        }
+
+        private static string _root;
+        private static bool _runSilent;
+        private static bool _fullReload;
+        private static bool _validate;
 
         private static void ParseArg(string[] args, ref int id)
         {
@@ -68,41 +104,6 @@ namespace Launcher
                     Exit();
                     break;
             }
-        }
-
-        public static void Exit()
-        {
-            LauncherSettings.Default.Save();
-            Environment.Exit(0);
-        }
-
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        public static void Main(string[] args)
-        {
-            _root = LauncherSettings.Default.ClientPath ?? "";
-
-            for (var i = 0; i < args.Length; i++)
-                ParseArg(args, ref i);
-
-            if (!_root.Contains(":"))
-                _root = $"{Application.StartupPath}\\{_root}";
-
-            //if (_runSilent)
-            //{
-                var upd = new Updater();
-                LauncherSettings.Default.Version = upd.Update(_root, _fullReload, _validate, LauncherSettings.Default.Version).Await();
-                Exit();
-            //}
-            //
-            //Message(
-            //    "Пока поддерживается только с включенным -silent режимом.\r\n" +
-            //    "Для списка возможных ключей используйте с ключом -h/-help/-?.",
-            //    "Launcher"
-            //);
-            //Exit();
         }
     }
 }

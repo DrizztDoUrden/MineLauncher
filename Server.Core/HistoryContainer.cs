@@ -8,20 +8,18 @@ namespace Server.Core
     public class HistoryContainer
     {
         public string CurrentVersion { get; set; }
-        public Dictionary<string, Dictionary<string, string>> History { get; private set; }
+        public Dictionary<string, Dictionary<string, string>> History { get; }
         [JsonIgnore] public Dictionary<string, string> CurrentVersionFiles => History[CurrentVersion];
 
-        public HistoryContainer()
-        {
-            History = new Dictionary<string, Dictionary<string, string>>();
-        }
+        public HistoryContainer() { History = new Dictionary<string, Dictionary<string, string>>(); }
 
         public string AddVersion(Dictionary<string, string> files, string version = null)
         {
-            if (CurrentVersion != null && !GetDiff(CurrentVersionFiles, files).Any()) return null;
+            if ((CurrentVersion != null) && !GetDiff(CurrentVersionFiles, files)
+                    .Any()) return null;
 
             if (version == null)
-                version = $"{DateTime.UtcNow.ToString("yyyyMMdd-hhmmss")}-{Guid.NewGuid().ToString("N")}";
+                version = $"{DateTime.UtcNow.ToString("yyyyMMdd-hhmmss")}-{Guid.NewGuid() .ToString("N")}";
 
             History.Add(version, files);
             CurrentVersion = version;
@@ -51,18 +49,23 @@ namespace Server.Core
             }
 
             foreach (var file in filesFrom)
-                diff.Add(file.Key, new FileState { IsRemoved = true });
+                diff.Add(
+                    file.Key,
+                    new FileState
+                    {
+                        IsRemoved = true
+                    });
 
             return diff;
         }
 
         public Dictionary<string, FileState> GetDiff(string versionFrom)
         {
-            if (versionFrom == null || !History.ContainsKey(versionFrom)) return null;
+            if ((versionFrom == null) || !History.ContainsKey(versionFrom)) return null;
 
             var files = CurrentVersionFiles;
             var filesFrom = new Dictionary<string, string>(History[versionFrom]);
-            
+
             return GetDiff(filesFrom, files);
         }
     }

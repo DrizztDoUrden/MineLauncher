@@ -9,6 +9,10 @@ namespace Server.Core
         [DataMember] public bool IsRemoved { get; set; }
 
         public static implicit operator FileState(string hash)
-            => new FileState { Hash = hash, IsRemoved = false, };
+            => new FileState
+            {
+                Hash = hash,
+                IsRemoved = false
+            };
     }
 }
